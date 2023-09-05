@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Card from "../../UI/Card/Card";
 import classes from "./AvailableMeals.module.scss";
 import MealItem from "./MealItem/MealItem";
@@ -31,14 +31,49 @@ const DUMMY_MEALS = [
 ];
 
 export default function AvailableMeals() {
-  const availableMeals = DUMMY_MEALS.map((singleMeal) => {
-    return <MealItem key={singleMeal.id} meal={singleMeal} />;
-  });
+  const [meals, setMeals] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorFetching, setErrorFetching] = useState(null);
+
+  useEffect(() => {
+    setIsLoading(true);
+    const fetchMeals = async () => {
+      try {
+        const response = await fetch(
+          "https://introduction-to-firebase-255ec-default-rtdb.firebaseio.com/meals.json"
+        );
+        const data = await response.json();
+
+        let loadedMeals = [];
+
+        for (let value in data) {
+          loadedMeals.push({
+            id: value,
+            ...data[value],
+          });
+        }
+
+        setMeals(loadedMeals);
+      } catch (err) {
+        setErrorFetching(err);
+      }
+    };
+    setIsLoading(false);
+    fetchMeals();
+  }, []);
+
+  let mealsResult = <p>Loading...</p>;
+
+  if (!isLoading && meals.length > 0) {
+    mealsResult = meals.map((singleMeal) => {
+      return <MealItem key={singleMeal.id} meal={singleMeal} />;
+    });
+  }
 
   return (
     <section className={classes["meals"]}>
       <Card>
-        <ul>{availableMeals}</ul>
+        <ul>{mealsResult}</ul>
       </Card>
     </section>
   );
