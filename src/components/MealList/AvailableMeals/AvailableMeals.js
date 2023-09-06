@@ -3,78 +3,70 @@ import Card from "../../UI/Card/Card";
 import classes from "./AvailableMeals.module.scss";
 import MealItem from "./MealItem/MealItem";
 
-const DUMMY_MEALS = [
-  {
-    id: "m1",
-    name: "Sushi",
-    description: "Finest fish and veggies",
-    price: 22.99,
-  },
-  {
-    id: "m2",
-    name: "Schnitzel",
-    description: "A german specialty!",
-    price: 16.5,
-  },
-  {
-    id: "m3",
-    name: "Barbecue Burger",
-    description: "American, raw, meaty",
-    price: 12.99,
-  },
-  {
-    id: "m4",
-    name: "Green Bowl",
-    description: "Healthy...and green...",
-    price: 18.99,
-  },
-];
-
 export default function AvailableMeals() {
   const [meals, setMeals] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [errorFetching, setErrorFetching] = useState(null);
 
   useEffect(() => {
-    setIsLoading(true);
     const fetchMeals = async () => {
-      try {
-        const response = await fetch(
-          "https://introduction-to-firebase-255ec-default-rtdb.firebaseio.com/meals.json"
-        );
-        const data = await response.json();
+      const response = await fetch(
+        "https://introduction-to-firebase-255ec-default-rtdb.firebaseio.com/meals.json"
+      );
 
-        let loadedMeals = [];
-
-        for (let value in data) {
-          loadedMeals.push({
-            id: value,
-            ...data[value],
-          });
-        }
-
-        setMeals(loadedMeals);
-      } catch (err) {
-        setErrorFetching(err);
+      if (!response.ok) {
+        throw new Error(`${response.status} ${response.statusText}`);
       }
+
+      const data = await response.json();
+      let loadedMeals = [];
+
+      for (let value in data) {
+        loadedMeals.push({
+          id: value,
+          ...data[value],
+        });
+      }
+
+      setMeals(loadedMeals);
+      setIsLoading(false);
     };
-    setIsLoading(false);
-    fetchMeals();
+
+    fetchMeals().catch((err) => {
+      setErrorFetching(err.message);
+      setIsLoading(false);
+    });
   }, []);
 
-  let mealsResult = <p>Loading...</p>;
-
-  if (!isLoading && meals.length > 0) {
-    mealsResult = meals.map((singleMeal) => {
-      return <MealItem key={singleMeal.id} meal={singleMeal} />;
-    });
-  }
-
   return (
-    <section className={classes["meals"]}>
-      <Card>
-        <ul>{mealsResult}</ul>
-      </Card>
-    </section>
+    <>
+      {isLoading && meals.length === 0 && (
+        <section className={classes["meals-loading"]}>
+          <p>Loading Meals...</p>
+        </section>
+      )}
+      {!isLoading && meals.length === 0 && !errorFetching && (
+        <section className={classes["no-meals"]}>
+          <p>No meals found...</p>{" "}
+        </section>
+      )}
+      {!isLoading && meals.length === 0 && errorFetching && (
+        <section className={classes["meals-error"]}>
+          <p>Failed to fetch</p>
+          <p>{errorFetching}</p>
+        </section>
+      )}
+      {!isLoading && meals.length !== 0 && (
+        <section className={classes["meals"]}>
+          <Card>
+            <ul>
+              {meals.map((singleMeal) => {
+                return <MealItem key={singleMeal.id} meal={singleMeal} />;
+              })}
+            </ul>
+          </Card>
+        </section>
+      )}
+    </>
   );
 }

@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from "react";
 import ModalContext from "../../../../store/modal-context";
 import CartContext from "../../../../store/cart-context";
-import CartIcon from "../../../Cart/CartIcon";
+import CartIcon from "../../../Cart/CartIcon/CartIcon";
 import classes from "./HeaderCartButton.module.scss";
 
 export default function HeaderCartButton() {
